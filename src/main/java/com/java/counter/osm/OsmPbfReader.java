@@ -27,7 +27,7 @@ public class OsmPbfReader {
         AtomicInteger numberOfNodes = new AtomicInteger();
         AtomicInteger numberOfWays = new AtomicInteger();
         AtomicInteger numberOfRelations = new AtomicInteger();
-        AtomicInteger numberOfTrainRelations = new AtomicInteger();
+        AtomicInteger numberOfRegionalTrains = new AtomicInteger();
  
         Sink sinkImplementation = new Sink() {
  
@@ -43,8 +43,13 @@ public class OsmPbfReader {
                 }
                 
                 EntityWrapper wrapper = new EntityWrapper(entity);
-                if(wrapper.isTrainStation()){
-                    numberOfTrainRelations.incrementAndGet();
+                if(wrapper.isRegionalTrain()){
+                    numberOfRegionalTrains.incrementAndGet();
+                    System.out.println(wrapper.getJsonString());
+                    
+                    
+                    
+                    /*
                     System.out.println(entity.getType() + "--" );
                     for(Tag tag:entity.getTags()){
                         System.out.println(tag.getKey() + " --> " + tag.getValue());
@@ -53,7 +58,7 @@ public class OsmPbfReader {
                         System.out.println(entry.getKey() + "-->" + entry.getValue());
                     }
                     Node node = (Node) entity;
-                    
+                    */
                     //System.out.println(entity.getTags());
                 }
             }
@@ -75,11 +80,15 @@ public class OsmPbfReader {
         
         reader.setSink(sinkImplementation);
         reader.run();
+        
+        System.out.println("Total Regional Trains Found : " + numberOfRegionalTrains);
  
+        /*
         System.out.println(numberOfNodes.get() + " Nodes are found.");
         System.out.println(numberOfWays.get() + " Ways are found.");
         System.out.println(numberOfRelations.get() + " Relations are found.");
         System.out.println(numberOfTrainRelations + " train routes are found.");
+        */
     }
  
 }

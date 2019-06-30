@@ -31,13 +31,46 @@ public class EntityWrapper {
         return containsKey;
     }
     
-    public boolean isTrainStation(){
-        if(this.containsKey("railway")){
-            if (this.mEntity.getTags().stream().anyMatch((tag) -> ("railway".equalsIgnoreCase(tag.getKey()) && ("buffer_stop".equalsIgnoreCase(tag.getValue()))))) {
+    public boolean isRegionalTrain(){
+        if(this.containsKey("name")){
+            if (this.mEntity.getTags().stream().anyMatch((tag) -> ("name".contains(tag.getKey()) 
+            		&& ((tag.getValue().contains("RE") && tag.getValue().contains(":")))
+            		|| ((tag.getValue().contains("RB") && tag.getValue().contains(":")))
+            		))) {
                 return true;
             }
         }
         return false;
     }
+    
+    public String toString() {
+    	StringBuilder builder = new StringBuilder("Entity :: ");
+    	String tab = "\t";
+    	for(Tag tag:this.mEntity.getTags()) {
+    		builder.append(tag.getKey() + " -> " + tag.getValue() + tab);
+    	}
+    	return builder.toString();
+    }
+    
+    public String getJsonString() {
+    	String line = "\n";
+    	String quote = "\"";
+    	String comma = ",";
+    	StringBuilder jsonString = new StringBuilder("{" + line);
+    	for(Tag tag:this.mEntity.getTags()) {
+    		jsonString.append(quote)
+    		.append(tag.getKey())
+    		.append(quote +":")
+    		.append(quote)
+    		.append(tag.getValue())
+    		.append(quote).append(comma)
+    		.append(line);
+    	}
+    	jsonString.deleteCharAt(jsonString.length() - 2);
+    	jsonString.append("},");
+    	return jsonString.toString();
+    }
+    
+    
     
 }

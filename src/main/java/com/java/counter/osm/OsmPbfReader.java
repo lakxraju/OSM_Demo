@@ -14,12 +14,19 @@ import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 import org.openstreetmap.osmosis.pbf2.v0_6.PbfReader;
  
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
  
 public class OsmPbfReader {
  
+	static Map<Long, Node> refToNodeMap = new HashMap<>();
+	
+	public static Node getNodeForId(Long id) {
+		return refToNodeMap.get(id);
+	}
+	
     public static void main(String[] args) {
         File osmFile = new File(".\\src\\resources\\berlin-latest.osm.pbf");
         PbfReader reader = new PbfReader(osmFile, 1);
@@ -28,6 +35,36 @@ public class OsmPbfReader {
         AtomicInteger numberOfWays = new AtomicInteger();
         AtomicInteger numberOfRelations = new AtomicInteger();
         AtomicInteger numberOfRegionalTrains = new AtomicInteger();
+        
+        Sink nodeParseSink = new Sink() {
+			
+			@Override
+			public void close() {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void complete() {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void initialize(Map<String, Object> metaData) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void process(EntityContainer entityContainer) {
+				Entity entity = entityContainer.getEntity();
+				if (entity instanceof Node) {
+					Node node = (Node) entity;
+                    refToNodeMap.put(node.getId(), node);
+                }
+			}
+		};
  
         Sink sinkImplementation = new Sink() {
  
@@ -40,7 +77,7 @@ public class OsmPbfReader {
                     numberOfWays.incrementAndGet();
                 } else if (entity instanceof Relation) {
                     numberOfRelations.incrementAndGet();
-                }
+               
                 
                 EntityWrapper wrapper = new EntityWrapper(entity);
                 if(wrapper.isRegionalTrain()){
@@ -60,6 +97,7 @@ public class OsmPbfReader {
                     Node node = (Node) entity;
                     */
                     //System.out.println(entity.getTags());
+                	}
                 }
             }
  
@@ -77,6 +115,9 @@ public class OsmPbfReader {
             }
  
         };
+        
+        reader.setSink(nodeParseSink);
+        reader.run();
         
         reader.setSink(sinkImplementation);
         reader.run();

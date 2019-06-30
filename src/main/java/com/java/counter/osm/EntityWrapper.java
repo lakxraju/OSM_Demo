@@ -5,7 +5,12 @@
  */
 package com.java.counter.osm;
 
+import java.util.Map.Entry;
+
 import org.openstreetmap.osmosis.core.domain.v0_6.Entity;
+import org.openstreetmap.osmosis.core.domain.v0_6.Node;
+import org.openstreetmap.osmosis.core.domain.v0_6.Relation;
+import org.openstreetmap.osmosis.core.domain.v0_6.RelationMember;
 import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
 
 /**
@@ -15,9 +20,6 @@ import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
 public class EntityWrapper {
     
     private final Entity mEntity;
-    
-    private final String routeString = "route";
-    private final String routeMasterString = "route_master";
     
     public EntityWrapper(Entity entity){
         this.mEntity  = entity;
@@ -57,6 +59,7 @@ public class EntityWrapper {
     	String quote = "\"";
     	String comma = ",";
     	StringBuilder jsonString = new StringBuilder("{" + line);
+    	
     	for(Tag tag:this.mEntity.getTags()) {
     		jsonString.append(quote)
     		.append(tag.getKey())
@@ -66,11 +69,64 @@ public class EntityWrapper {
     		.append(quote).append(comma)
     		.append(line);
     	}
-    	jsonString.deleteCharAt(jsonString.length() - 2);
-    	jsonString.append("},");
+    	//jsonString.deleteCharAt(jsonString.length() - 2);
+    	jsonString.append(quote)
+    	.append("via\" :")
+    	.append(quote)
+    	.append(getViaStations())
+    	.append(quote).append(comma)
+    	.append(line)
+    	.append("\"viaIDs\" :")
+    	.append(quote)
+    	.append(getViaIds())
+    	.append(quote)
+    	.append("},");
     	return jsonString.toString();
     }
     
+    private String getNodeName(Node node) {
+    	for(Tag tag: node.getTags()) {
+    		if(tag.getKey().equals("name")) {
+    			return tag.getValue();
+    		}
+    	}
+    	return "";
+    	
+    }
+    
+	private String getViaStations() {
+		StringBuilder viaStations = new StringBuilder("");
+		
+		Relation relation =  (Relation)this.mEntity;
+		for (RelationMember member: relation.getMembers()) {
+			
+			if(member.getMemberRole().contains("stop")) {
+				Node node = OsmPbfReader.getNodeForId(member.getMemberId());
+				if(node != null) {
+					viaStations.append(getNodeName(node))
+					.append(",");
+				}
+			}
+		}
+		if(viaStations.length() > 0) {
+			viaStations.deleteCharAt(viaStations.length() - 1);
+		}
+		return viaStations.toString();
+	}
+	
+	private String getViaIds() {
+		StringBuilder viaStationIds = new StringBuilder("");
+		
+		Relation relation =  (Relation)this.mEntity;
+		for (RelationMember member: relation.getMembers()) {
+			viaStationIds.append(member.getMemberId())
+			.append(",");
+		}
+		if(viaStationIds.length() > 0) {
+			viaStationIds.deleteCharAt(viaStationIds.length() - 1);
+		}
+		return viaStationIds.toString();
+	}
     
     
 }
